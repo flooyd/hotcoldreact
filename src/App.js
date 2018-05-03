@@ -2,63 +2,47 @@ import React, { Component } from 'react';
 import HighLow from './HighLow';
 import Guess from './Guess';
 import Guesses from './Guesses'
+import {connect} from 'react-redux';
 import './App.css';
 
+import {
+  addGuess,
+  setHint,
+  incrementCurrentGuess,
+  setGameOver,
+  startNewGame
+} from './actions';
+
 class App extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      guesses: [],
-      hint: 'Make your Guess',
-      currentGuess: 1,
-      correctNum: Math.floor(Math.random() * 101),
-      gameOver: false
-    };
-  }
-
   handleGuess(guess) {
-    let guesses = this.state.guesses;
-    let currentGuess = this.state.currentGuess + 1;
-    guesses.push(guess);
-    let hint = '';
-    let gameOver = false;
+    let hint = this.props.hint;
+    let gameOver = this.props.gameOver;
 
-    if(guess > this.state.correctNum) {
+    if(guess > this.props.correctNum) {
       hint = 'Too High!';
-    } else if (guess < this.state.correctNum) {
+    } else if (guess < this.props.correctNum) {
       hint = 'Too Low!';
     } else {
       hint = 'Perfect! You win :D';
       gameOver = true;
     }
 
-    this.setState({
-      hint,
-      gameOver,
-      currentGuess
-    });
+    this.props.dispatch(addGuess(guess));
+    this.props.dispatch(incrementCurrentGuess());
+    this.props.dispatch(setHint(hint));
+    this.props.dispatch(setGameOver(gameOver));
 
-  }
-
-  newGame() {
-    this.setState({
-      guesses: [],
-      hint: 'Make your Guess',
-      currentGuess: 1,
-      correctNum: Math.floor(Math.random() * 101),
-      gameOver: false
-    });
   }
 
   render() {
-    console.log(this.state.correctNum)
-    if (this.state.gameOver) {
+    console.log(this.props.correctNum)
+    if (this.props.gameOver) {
       return (
         <section className="app">
         <div>
-          <button onClick={() => this.newGame()}>New Game</button>
+          <button onClick={() => this.props.dispatch(startNewGame())}>New Game</button>
           <h1 style={{textAlign: 'center'}}>High or Low</h1>
-          <HighLow highlow={this.state.hint}/>
+          <HighLow highlow={this.props.hint}/>
         </div>
         </section>
       )
@@ -67,9 +51,9 @@ class App extends Component {
         <section className="app">
           <div>
             <h1 style={{textAlign: 'center'}}>High or Low</h1>
-            <HighLow highlow={this.state.hint}/>
-            <Guess guessNum={this.state.currentGuess} handleGuess={guess => this.handleGuess(guess)}/>
-            <Guesses guesses={this.state.guesses}/>
+            <HighLow highlow={this.props.hint}/>
+            <Guess guessNum={this.props.currentGuess} handleGuess={guess => this.handleGuess(guess)}/>
+            <Guesses guesses={this.props.guesses}/>
           </div>
         </section>
       );
@@ -78,4 +62,12 @@ class App extends Component {
   }
 }
 
-export default App;
+export const mapStateToProps = state => ({
+    guesses: state.guesses,
+    gameOver: state.gameOver,
+    currentGuess: state.currentGuess,
+    correctNum: state.correctNum,
+    hint: state.hint
+});
+
+export default connect(mapStateToProps)(App);
